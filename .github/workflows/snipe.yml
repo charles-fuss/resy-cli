@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-windows-binary-private:
+  run-binary:
       runs-on: ubuntu-latest
       env:
         RES_DAYS_AHEAD: "20"
@@ -22,9 +22,9 @@ jobs:
             fetch-depth: 1
         - name: Download binary
           run: |
-              wget https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -o resy-cli-lin
+              wget https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -O resy-cli-lin
               chmod +x resy-cli-lin
-        - name: go mfer
+        - name: Book reservation
           run: |
               #!/usr/bin/env bash
               set -euo pipefail
