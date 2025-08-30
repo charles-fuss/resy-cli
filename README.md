@@ -5,7 +5,7 @@
    Modify internal/setup/secret.yml with your secrets to avoid interactive setup in workflow
 </li>
 <li>Modify the workflow to target a particular restaurant</li>
-<li>Rebuild the binary and push to repo with ur new swag workflow</li>
+<li>Rebuild the binary and push to repo with ur new swag workflow (gh release upload v1.2.0 .\resy-cli-windows-amd64.exe --clobber)</li>
 </ul>
 
 

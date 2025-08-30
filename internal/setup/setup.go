@@ -8,7 +8,7 @@ import (
 )
 
 func SurveyConfig() error {
-	cfgPath := filepath.Join(".", "secret.yml")
+	cfgPath := filepath.Join("internal/setup/", "secret.yml")
 
 	viper.SetConfigFile(cfgPath)
 	viper.SetConfigType("yaml")
