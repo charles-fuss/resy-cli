@@ -23,7 +23,6 @@
                 echo book  --partySize=$env:PARTY_SIZE      --reservationDate=$date   --reservationTimes=$t   --venueId=$env:VENUE_ID --reservationTypes=""
 
                 Write-Host "Attempting booking at time: $t"
-                .\resy-cli-windows-amd64.exe book  --partySize=$env:PARTY_SIZE   --reservationDate=$date  --reservationTimes=$t  --venueId=$env:VENUE_ID  --reservationTypes=""
-              }
+                .\resy-cli-windows-amd64.exe book --partySize=$env:PARTY_SIZE  --reservationDate=$date --reservationTimes=$t --venueId=$env:VENUE_ID --reservationTypes=""              }
 
               Write-Host "All attempts finished."
