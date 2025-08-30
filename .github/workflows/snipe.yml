@@ -29,7 +29,7 @@ jobs:
               set -euo pipefail
 
               # config
-              BIN="$HOME/resy-cli-lin"               # path to linux binary (adjust)
+              BIN="$(pwd)/resy-cli-lin"               # path to linux binary (adjust)
               RES_DAYS_AHEAD=20
               VENUE_ID=60058
               PARTY_SIZE=2
