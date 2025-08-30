@@ -43,7 +43,7 @@ jobs:
 
               foreach ($t in $times) {
                 Write-Host "Attempting booking at time: $t"
-                $HOME/prod-windows.exe book `
+                $HOME\prod-windows.exe book `
                   --partySize=$env:PARTY_SIZE `
                   --reservationDate=$date `
                   --reservationTimes=$t `
