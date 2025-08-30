@@ -15,11 +15,13 @@
               "23:00:00","23:15:00","23:30:00","23:45:00",
               "00:00:00"
             )
-
+            $env:PARTY_SIZE = 2
+            $env:VENUE_ID = 60022
             foreach ($t in $times) {
               Write-Host "Attempting booking at time: $t"
               echo               .\prod-windows.exe book --partySize=$env:PARTY_SIZE --reservationDate=$date  --reservationTimes=$t --venueId=$env:VENUE_ID --reservationTypes=""
               .\prod-windows.exe book --partySize=$env:PARTY_SIZE --reservationDate=$date  --reservationTimes=$t --venueId=$env:VENUE_ID --reservationTypes=""
             }
+            
 
             Write-Host "All attempts finished."

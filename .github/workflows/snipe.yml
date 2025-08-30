@@ -21,6 +21,9 @@ jobs:
             echo "HOME=$HOME"
             pwd
             ls
+        - name: Download binary
+          run: |
+              Invoke-WebRequest -Uri https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-windows-amd64.exe -OutFile resy-cli-windows-amd64.exe
         - name: go mfer
           run: |
               # PowerShell on windows-latest
@@ -43,8 +46,7 @@ jobs:
 
               foreach ($t in $times) {
                 Write-Host "Attempting booking at time: $t"
-                $exe = Join-Path $env:GITHUB_WORKSPACE 'prod-windows.exe'
-                & "$exe" book `
+                .\resy-cli-windows-amd64.exe book `
                   --partySize=$env:PARTY_SIZE `
                   --reservationDate=$date `
                   --reservationTimes=$t `
