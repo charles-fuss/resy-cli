@@ -9,19 +9,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-windows-binary-private:
+run-windows-binary-private:
     runs-on: windows-latest
+    env:
+      RES_DAYS_AHEAD: "20"
+      VENUE_ID: "60058"
+      PARTY_SIZE: "2"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Snipe monkey bar
-        run: |
-        - name: Run booking
-        env:
-          RES_DAYS_AHEAD: 20
-          venueId: 60058
-          partySize: 2
+      - name: go mfer
         run: |
             # PowerShell on windows-latest
             $ErrorActionPreference = "Stop"
