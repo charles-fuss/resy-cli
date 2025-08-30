@@ -9,82 +9,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  snipe:
-    runs-on: ubuntu-latest
-    env:
-      RES_DAYS_AHEAD: "20"     # adjust reservation offset
-      VENUE_ID: "60058"
-      PARTY_SIZE: "2"
-
+  run-windows-binary-private:
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build lin-resy-cli for linux/amd64
+      - name: Snipe monkey bar
         run: |
-          set -euo pipefail
-          echo "Building lin-resy-cli for linux/amd64"
-          # Force a linux binary for ubuntu-latest runner (x86_64)
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o lin-resy-cli ./...
-          chmod +x lin-resy-cli
-
-      - name: Snipe at 09:00 America/New_York with micro-attempts
+        - name: Run booking
+        env:
+          RES_DAYS_AHEAD: 20
+          venueId: 60058
+          partySize: 2
         run: |
-          set -euo pipefail
-          echo "Starting snipe job..."
+            # PowerShell on windows-latest
+            $ErrorActionPreference = "Stop"
 
-          # get today's date in America/New_York
-          TODAY_ET=$(TZ=America/New_York date +%F)
-          TARGET=$(TZ=America/New_York date -d "$TODAY_ET 09:00:00" +%s)
-          NOW=$(date +%s)
-          echo "Now (epoch): $NOW"
-          echo "Target 09:00 ET (epoch): $TARGET ($(TZ=America/New_York date -d "@$TARGET" '+%Y-%m-%d %H:%M:%S %Z'))"
+            # compute reservation date
+            $date = (Get-Date).AddDays($env:RES_DAYS_AHEAD).ToString('yyyy-MM-dd')
+            Write-Host "Reservation date: $date"
 
-          if [ "$NOW" -gt $((TARGET + 3600)) ]; then
-            echo "Job started >1 hour after target. Exiting to avoid duplicate execution."
-            exit 0
-          fi
+            $times = @(
+              "17:00:00","17:15:00","17:30:00","17:45:00",
+              "18:00:00","18:15:00","18:30:00","18:45:00",
+              "19:00:00","19:15:00","19:30:00","19:45:00",
+              "20:00:00","20:15:00","20:30:00","20:45:00",
+              "21:00:00","21:15:00","21:30:00","21:45:00",
+              "22:00:00","22:15:00","22:30:00","22:45:00",
+              "23:00:00","23:15:00","23:30:00","23:45:00",
+              "00:00:00"
+            )
 
-          OFFSETS=(-30 -15 0 15 30)   # seconds around the exact moment to compensate for latency
-          TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
-                  "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
-                  "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
-                  "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
-
-          RES_DATE="$(date -d "+${RES_DAYS_AHEAD} days" '+%Y-%m-%d')"
-          echo "Reservation date: $RES_DATE"
-
-          for offset in "${OFFSETS[@]}"; do
-            attempt_time=$((TARGET + offset))
-            wait=$((attempt_time - NOW))
-
-            if [ "$wait" -gt 0 ]; then
-              echo "Sleeping $waits seconds until attempt (offset ${offset}s) -> $(TZ=America/New_York date -d "@$attempt_time")"
-              sleep "$wait"
-            else
-              late_by=$((NOW - attempt_time))
-              if [ "$late_by" -gt 120 ]; then
-                echo "Skipping attempt offset ${offset}s — too late by ${late_by}s."
-                continue
-              else
-                echo "Attempt offset ${offset}s is in the past by ${late_by}s; running immediately."
-              fi
-            fi
-
-            echo "=== Running booking attempt for offset ${offset}s at $(date '+%Y-%m-%d %H:%M:%S %Z') ==="
-
-            for t in "${TIMES[@]}"; do
-              echo "Attempting booking: time=$t partySize=${PARTY_SIZE} date=${RES_DATE} venue=${VENUE_ID}"
-              ./lin-resy-cli book \
-                --partySize="${PARTY_SIZE}" \
-                --reservationDate="${RES_DATE}" \
-                --reservationTimes="$t" \
-                --venueId="${VENUE_ID}" \
+            foreach ($t in $times) {
+              Write-Host "Attempting booking at time: $t"
+              .\resy-cli.exe book `
+                --partySize=$env:PARTY_SIZE `
+                --reservationDate=$date `
+                --reservationTimes=$t `
+                --venueId=$env:VENUE_ID `
                 --reservationTypes=""
-              sleep 0.2
-            done
+            }
 
-            NOW=$(date +%s)
-          done
-
-          echo "All attempts complete."
+            Write-Host "All attempts finished."
