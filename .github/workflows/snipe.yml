@@ -69,11 +69,9 @@ jobs:
                   '--venueId', $env:VENUE_ID
                 )
 
-                # log the exact command that will run (single-line)
-                Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
+                Write-Host ("CMD: ./{0} {1}" -f $exe, ($args -join ' '))
 
-                # run it; use call operator with an args array (safe quoting)
-                & "$exe" @args
+                ./$exe @args
 
                 Write-Host "ExitCode: $LASTEXITCODE"
                 Start-Sleep -Milliseconds 250
