@@ -10,7 +10,7 @@ on:
 
 jobs:
   run-windows-binary-private:
-      runs-on: windows-latest
+      runs-on: ubuntu-latest
       env:
         RES_DAYS_AHEAD: "20"
         VENUE_ID: "60058"
@@ -22,66 +22,36 @@ jobs:
             fetch-depth: 1
         - name: Download binary
           run: |
-              Invoke-WebRequest -Uri https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-windows-amd64.exe -OutFile resy-cli-windows-amd64.exe
-        - name: debug
-          run: |
-              ls
-              pwd
-              tree
+              curl -X GET https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -o resy-cli-lin
         - name: go mfer
           run: |
-              Write-Host "ENV DEBUG: RES_DAYS_AHEAD='$env:RES_DAYS_AHEAD' VENUE_ID='$env:VENUE_ID' PARTY_SIZE='$env:PARTY_SIZE'"
+              #!/usr/bin/env bash
+              set -euo pipefail
 
-              # explicit path to binary in the workspace (safe)
-              $exe = Join-Path $env:GITHUB_WORKSPACE 'resy-cli-windows-amd64.exe'
-              Write-Host "Expected exe path: $exe"
+              # config
+              BIN="$HOME/resy-cli-lin"               # path to linux binary (adjust)
+              RES_DAYS_AHEAD=20
+              VENUE_ID=60058
+              PARTY_SIZE=2
+              # times to attempt (one per invocation)
+              TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
+                      "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
+                      "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
+                      "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
 
-              if (-not (Test-Path $exe)) {
-                Write-Host "Workspace listing (top-level):"
-                Get-ChildItem -Path $env:GITHUB_WORKSPACE -Force | Select-Object -First 100 | Format-Table
-                throw "Binary not found at $exe. Ensure the download step wrote to the repository working directory."
-              }
+              # compute ET target for today at 09:00:00
+              TODAY_ET=$(TZ=America/New_York date +%F)
+              TARGET_TS=$(TZ=America/New_York date -d "$TODAY_ET 09:00:00" +%s)
+              NOW_TS=$(date +%s)
 
-              # compute reservation date (use single variable name)
-              $resDate = (Get-Date).AddDays([int]$env:RES_DAYS_AHEAD).ToString('yyyy-MM-dd')
-              Write-Host "Reservation date: $resDate"
+              RES_DATE=$(date -d "+${RES_DAYS_AHEAD} days" '+%Y-%m-%d')
+              echo "Reservation date: $RES_DATE"
 
-              # times list
-              $times = @(
-                "17:00:00","17:15:00","17:30:00","17:45:00",
-                "18:00:00","18:15:00","18:30:00","18:45:00",
-                "19:00:00","19:15:00","19:30:00","19:45:00",
-                "20:00:00","20:15:00","20:30:00","20:45:00",
-                "21:00:00","21:15:00","21:30:00","21:45:00",
-                "22:00:00","22:15:00","22:30:00","22:45:00",
-                "23:00:00","23:15:00","23:30:00","23:45:00",
-                "00:00:00"
-              )
-              Write-Host "Authenticating to resy cli"
-              & "$exe" setup
+                for t in "${TIMES[@]}"; do
+                  echo "Attempt: time=$t"
+                  "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID"
+                  sleep 0.2
+                done
 
-
-              Write-Host "Testing auth"
-              & "$exe" ping
-
-              foreach ($t in $times) {
-                Write-Host "=== Attempting booking at time: $t ==="
-
-                $args = @(
-                  'book',
-                  '--partySize', $env:PARTY_SIZE,
-                  '--reservationDate', $resDate,
-                  '--reservationTimes', $t,
-                  '--venueId', $env:VENUE_ID
-                )
-
-                Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
-
-                # run it; use call operator with an args array (safe quoting)
-                & "$exe" @args
-
-                Write-Host "ExitCode: $LASTEXITCODE"
-                Start-Sleep -Milliseconds 250
-              }
-
-              Write-Host "All attempts finished."
+                NOW_TS=$(date +%s)
+              done
