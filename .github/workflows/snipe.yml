@@ -45,6 +45,11 @@ jobs:
               TARGET_TS=$(TZ=America/New_York date -d "$TODAY_ET 09:00:00" +%s)
               NOW_TS=$(date +%s)
 
+              echo "resy auth"
+              ./resy-cli-lin setup
+              echo "resy auth test"
+              ./resy-cli-lin ping
+
               RES_DATE=$(date -d "+${RES_DAYS_AHEAD} days" '+%Y-%m-%d')
               echo "Reservation date: $RES_DATE"
 
