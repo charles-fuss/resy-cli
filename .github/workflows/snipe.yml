@@ -43,7 +43,8 @@ jobs:
 
               foreach ($t in $times) {
                 Write-Host "Attempting booking at time: $t"
-                .\prod-windows.exe book `
+                $exe = Join-Path $env:GITHUB_WORKSPACE 'prod-windows.exe'
+                & "$exe" book `
                   --partySize=$env:PARTY_SIZE `
                   --reservationDate=$date `
                   --reservationTimes=$t `
