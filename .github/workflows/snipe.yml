@@ -42,11 +42,18 @@ jobs:
               )
               $env:PARTY_SIZE = 2
               $env:VENUE_ID = 60058
+              $exe = "resy-cli-windows-amd64.exe"
 
               foreach ($t in $times) {
-                echo  book  --partySize=$env:PARTY_SIZE      --reservationDate=$date   --reservationTimes=$t   --venueId=$env:VENUE_ID --reservationTypes=""
-
+                $args = @(
+                'book',
+                '--partySize', $env:PARTY_SIZE,
+                '--reservationDate', $resDate,
+                '--reservationTimes', $t,
+                '--venueId', $env:VENUE_ID
+              )
                 Write-Host "Attempting booking at time: $t"
+                & "$exe" @args
                 .\resy-cli-windows-amd64.exe book --partySize=$env:PARTY_SIZE  --reservationDate=$date --reservationTimes=$t --venueId=$env:VENUE_ID --reservationTypes=""
               }
 
