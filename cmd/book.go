@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/lgrees/resy-cli/internal/book"
@@ -11,6 +13,37 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
+
+func sanitizeFilename(name string) string {
+	// strip control chars and illegal Windows characters
+	re := regexp.MustCompile(`[<>:"/\\|?*\x00-\x1F]`)
+	s := re.ReplaceAllString(name, "-")
+
+	// Trim trailing spaces and dots (Windows won't accept these)
+	s = strings.TrimRight(s, " .")
+
+	// Avoid reserved device names (CON, PRN, AUX, NUL, COM1..COM9, LPT1..LPT9)
+	upper := strings.ToUpper(s)
+	reserved := map[string]struct{}{
+		"CON": {}, "PRN": {}, "AUX": {}, "NUL": {},
+	}
+	for i := 1; i <= 9; i++ {
+		reserved[fmt.Sprintf("COM%d", i)] = struct{}{}
+		reserved[fmt.Sprintf("LPT%d", i)] = struct{}{}
+	}
+	if _, ok := reserved[upper]; ok {
+		s = "_" + s
+	}
+
+	// avoid ridiculously long names (optional safety)
+	if len(s) > 200 {
+		s = s[:200]
+	}
+	if s == "" {
+		s = "log"
+	}
+	return s
+}
 
 var bookCmd = &cobra.Command{
 	Use:   "book",
@@ -47,9 +80,16 @@ var bookCmd = &cobra.Command{
 		venueDetails, _ := book.FetchVenueDetails(venueId)
 		formattedTime := time.Now().Format("Mon Jan _2 15:04:05 2006")
 
-		logFileName := path.Join(p.LogPath, fmt.Sprintf("%s_%s.log", venueDetails.Name, formattedTime))
+		dirName := sanitizeFilename(fmt.Sprintf("%s_%s.log", venueDetails.Name, formattedTime))
+
+		fullLogFileName := path.Join(p.LogPath, dirName)
+		if err := os.MkdirAll(dirName, 0o755); err != nil {
+			// Don't panic in init(); just warn and continue
+			fmt.Fprintf(os.Stderr, "warning: unable to create log directory %s: %v\n", fullLogFileName, err)
+		}
+
 		logFile, err := os.OpenFile(
-			logFileName,
+			fullLogFileName,
 			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
 			0664,
 		)
@@ -62,7 +102,6 @@ var bookCmd = &cobra.Command{
 		l := zerolog.New(logFile).With().Timestamp().Logger()
 
 		l.Info().Object("booking_details", bookingDetails).Msg("starting book job")
-
 		if bookingDateTime != "" {
 			err = book.WaitThenBook(bookingDetails, dryRun, l)
 		} else {

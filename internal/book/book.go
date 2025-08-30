@@ -109,6 +109,8 @@ func Book(bookingDetails *BookingDetails, dryRun bool, logger zerolog.Logger) er
 		logger.Error().Err(err).Msg("no booking occurred")
 		return err
 	}
+	fmt.Printf("Successfully booked %s for %s people at %s at %s", bookingDetails.VenueId, bookingDetails.PartySize, bookingDetails.ReservationDate, bookingDetails.BookingDateTime)
+
 	return nil
 }
 
