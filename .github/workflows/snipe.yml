@@ -31,9 +31,6 @@ jobs:
 
               # config
               BIN="$(pwd)/resy-cli-lin"               # path to linux binary (adjust)
-              RES_DAYS_AHEAD=20
-              VENUE_ID=60058
-              PARTY_SIZE=2
               # times to attempt (one per invocation)
               TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
                       "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
