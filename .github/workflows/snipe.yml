@@ -12,8 +12,8 @@ jobs:
   run-windows-binary-private:
       runs-on: windows-latest
       env:
-        RES_DAYS_AHEAD: "12"
-        VENUE_ID: "5091"
+        RES_DAYS_AHEAD: "20"
+        VENUE_ID: "60058"
         PARTY_SIZE: "2"
       steps:
         - name: Checkout repo (so supporting files exist)
@@ -23,6 +23,11 @@ jobs:
         - name: Download binary
           run: |
               Invoke-WebRequest -Uri https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-windows-amd64.exe -OutFile resy-cli-windows-amd64.exe
+        - name: debug
+          run: |
+              ls
+              pwd
+              tree
         - name: go mfer
           run: |
               Write-Host "ENV DEBUG: RES_DAYS_AHEAD='$env:RES_DAYS_AHEAD' VENUE_ID='$env:VENUE_ID' PARTY_SIZE='$env:PARTY_SIZE'"
@@ -53,7 +58,11 @@ jobs:
                 "00:00:00"
               )
               Write-Host "Authenticating to resy cli"
-              sudo & "$exe" setup
+              Start-Process -FilePath $exe -ArgumentList 'setup' -Verb RunAs -Wait
+
+
+              Write-Host "Testing auth"
+              Start-Process -FilePath $exe -ArgumentList 'ping' -Verb RunAs -Wait
 
               foreach ($t in $times) {
                 Write-Host "=== Attempting booking at time: $t ==="
@@ -69,7 +78,7 @@ jobs:
                 Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
 
                 # run it; use call operator with an args array (safe quoting)
-                sudo & "$exe" @args
+                & "$exe" @args
 
                 Write-Host "ExitCode: $LASTEXITCODE"
                 Start-Sleep -Milliseconds 250
