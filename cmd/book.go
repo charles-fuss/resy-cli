@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -76,30 +77,45 @@ var bookCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		logDir := p.LogPath
+		if logDir == "" {
+			// fallback to current working directory if app path is missing
+			cwd, _ := os.Getwd()
+			logDir = cwd
+		}
 
 		venueDetails, _ := book.FetchVenueDetails(venueId)
-		formattedTime := time.Now().Format("Mon Jan _2 15:04:05 2006")
-
-		dirName := sanitizeFilename(fmt.Sprintf("%s_%s.log", venueDetails.Name, formattedTime))
-
-		fullLogFileName := path.Join(p.LogPath, dirName)
-		if err := os.MkdirAll(dirName, 0o755); err != nil {
-			// Don't panic in init(); just warn and continue
-			fmt.Fprintf(os.Stderr, "warning: unable to create log directory %s: %v\n", fullLogFileName, err)
+		venueName := "unknown-venue"
+		if venueDetails != nil && venueDetails.Name != "" {
+			venueName = venueDetails.Name
 		}
 
-		logFile, err := os.OpenFile(
-			fullLogFileName,
-			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
-			0664,
-		)
+		formattedTime := time.Now().Format("Mon Jan _2 15-04-05 2006") // use hyphens instead of colons for filenames
+		fileName := sanitizeFilename(fmt.Sprintf("%s_%s.log", venueName, formattedTime))
+		fullLogFileName := filepath.Join(logDir, fileName)
+
+		// Create directory (directory only!)
+		if err := os.MkdirAll(filepath.Dir(fullLogFileName), 0o755); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: unable to create log directory %s: %v\n", filepath.Dir(fullLogFileName), err)
+		}
+
+		// Try to open the log file. If it fails, fall back to stderr and continue.
+		var logWriter io.Writer
+		var logFile *os.File
+		logFile, err = os.OpenFile(fullLogFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o664)
 		if err != nil {
-			fmt.Printf("error formatting logfile -- %v", err)
+			fmt.Fprintf(os.Stderr, "warning: could not open log file %s: %v; falling back to stderr\n", fullLogFileName, err)
+			logWriter = os.Stderr
+		} else {
+			logWriter = logFile
+			// only close if we actually opened the file
+			defer func() {
+				_ = logFile.Close()
+			}()
 		}
 
-		defer logFile.Close()
-
-		l := zerolog.New(logFile).With().Timestamp().Logger()
+		// create logger on provided writer (never nil)
+		l := zerolog.New(logWriter).With().Timestamp().Logger()
 
 		l.Info().Object("booking_details", bookingDetails).Msg("starting book job")
 		if bookingDateTime != "" {
