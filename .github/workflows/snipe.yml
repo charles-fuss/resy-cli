@@ -20,7 +20,7 @@ jobs:
           run: |
             echo "HOME=$HOME"
             pwd
-            ls -la
+            ls
         - name: go mfer
           run: |
               # PowerShell on windows-latest
