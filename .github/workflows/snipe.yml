@@ -40,16 +40,12 @@ jobs:
                 "23:00:00","23:15:00","23:30:00","23:45:00",
                 "00:00:00"
               )
-              echo  book  --partySize=$env:PARTY_SIZE      --reservationDate=$date   --reservationTimes=$t   --venueId=$env:VENUE_ID --reservationTypes=""
 
               foreach ($t in $times) {
+              echo  book  --partySize=$env:PARTY_SIZE      --reservationDate=$date   --reservationTimes=$t   --venueId=$env:VENUE_ID --reservationTypes=""
+
                 Write-Host "Attempting booking at time: $t"
-                .\resy-cli-windows-amd64.exe book `
-                  --partySize=$env:PARTY_SIZE `
-                  --reservationDate=$date `
-                  --reservationTimes=$t `
-                  --venueId=$env:VENUE_ID `
-                  --reservationTypes=""
+                .\resy-cli-windows-amd64.exe book  --partySize=$env:PARTY_SIZE   --reservationDate=$date  --reservationTimes=$t  --venueId=$env:VENUE_ID ` --reservationTypes=""
               }
 
               Write-Host "All attempts finished."
