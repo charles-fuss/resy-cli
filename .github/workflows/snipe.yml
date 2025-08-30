@@ -27,7 +27,7 @@ jobs:
           run: |
               ls
               pwd
-              
+              tree
         - name: go mfer
           run: |
               Write-Host "ENV DEBUG: RES_DAYS_AHEAD='$env:RES_DAYS_AHEAD' VENUE_ID='$env:VENUE_ID' PARTY_SIZE='$env:PARTY_SIZE'"
