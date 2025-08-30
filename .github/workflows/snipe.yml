@@ -55,8 +55,7 @@ jobs:
 
                 for t in "${TIMES[@]}"; do
                   echo "Attempt: time=$t"
-                  "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID"
-                  sleep 0.2
+                  "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID" || true
                 done
 
                 NOW_TS=$(date +%s)
