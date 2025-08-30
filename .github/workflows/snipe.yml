@@ -69,9 +69,10 @@ jobs:
                   '--venueId', $env:VENUE_ID
                 )
 
-                Write-Host ("CMD: ./{0} {1}" -f $exe, ($args -join ' '))
+                Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
 
-                ./"$exe" @args
+                # run it; use call operator with an args array (safe quoting)
+                & "$exe" @args
 
                 Write-Host "ExitCode: $LASTEXITCODE"
                 Start-Sleep -Milliseconds 250

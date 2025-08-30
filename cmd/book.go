@@ -94,7 +94,7 @@ var bookCmd = &cobra.Command{
 			0664,
 		)
 		if err != nil {
-			panic(err)
+			fmt.Printf("error formatting logfile -- %v", err)
 		}
 
 		defer logFile.Close()
