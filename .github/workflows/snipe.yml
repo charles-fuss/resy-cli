@@ -53,7 +53,7 @@ jobs:
                 "00:00:00"
               )
               Write-Host "Authenticating to resy cli"
-              & "$exe" setup
+              sudo & "$exe" setup
 
               foreach ($t in $times) {
                 Write-Host "=== Attempting booking at time: $t ==="
@@ -69,7 +69,7 @@ jobs:
                 Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
 
                 # run it; use call operator with an args array (safe quoting)
-                & "$exe" @args
+                sudo & "$exe" @args
 
                 Write-Host "ExitCode: $LASTEXITCODE"
                 Start-Sleep -Milliseconds 250
