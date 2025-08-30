@@ -16,6 +16,11 @@ jobs:
         VENUE_ID: "60058"
         PARTY_SIZE: "2"
       steps:
+        - name: Debug paths
+          run: |
+            echo "HOME=$HOME"
+            pwd
+            ls -la
         - name: go mfer
           run: |
               # PowerShell on windows-latest
@@ -38,7 +43,7 @@ jobs:
 
               foreach ($t in $times) {
                 Write-Host "Attempting booking at time: $t"
-                .\prod-windows.exe book `
+                $HOME/prod-windows.exe book `
                   --partySize=$env:PARTY_SIZE `
                   --reservationDate=$date `
                   --reservationTimes=$t `
