@@ -16,6 +16,10 @@ jobs:
         VENUE_ID: "60058"
         PARTY_SIZE: "2"
       steps:
+        - name: Checkout repo (so supporting files exist)
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 1
         - name: Download binary
           run: |
               Invoke-WebRequest -Uri https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-windows-amd64.exe -OutFile resy-cli-windows-amd64.exe
