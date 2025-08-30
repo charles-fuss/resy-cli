@@ -2,47 +2,31 @@ package setup
 
 import (
 	"fmt"
+	"path/filepath"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/viper"
 )
 
-var questions = []*survey.Question{
-	{
-		Name:     "apiKey",
-		Prompt:   &survey.Input{Message: "Api Key:"},
-		Validate: survey.Required,
-	},
-	{
-		Name:     "authToken",
-		Prompt:   &survey.Input{Message: "Auth Token:"},
-		Validate: survey.Required,
-	},
-}
-
 func SurveyConfig() error {
-	answers := struct {
-		ApiKey    string
-		AuthToken string
-	}{}
+	cfgPath := filepath.Join(".", "secret.yml")
 
-	err := survey.Ask(questions, &answers)
-	if err != nil {
-		return err
+	viper.SetConfigFile(cfgPath)
+	viper.SetConfigType("yaml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to read %s: %w", cfgPath, err)
 	}
 
-	confirm := false
-	survey.AskOne(&survey.Confirm{Message: "Does this look correct?"}, &confirm)
+	apiKey := viper.GetString("resy_api_key")
+	authToken := viper.GetString("resy_auth_token")
 
-	if confirm {
-		viper.Set("resy_api_key", answers.ApiKey)
-		viper.Set("resy_auth_token", answers.AuthToken)
-		viper.WriteConfig()
-		fmt.Println("Your user info has been saved! You're all set to start booking.")
-
-	} else {
-		fmt.Println("Your user info was not saved.")
+	if apiKey == "" || authToken == "" {
+		return fmt.Errorf("%s is missing required keys: resy_api_key and/or resy_auth_token", cfgPath)
 	}
 
+	viper.Set("resy_api_key", apiKey)
+	viper.Set("resy_auth_token", authToken)
+
+	fmt.Printf("Loaded Resy credentials from %s\n", cfgPath)
 	return nil
 }

@@ -1,4 +1,13 @@
 # resy-cli <!-- omit in toc -->
+<h1> For this fork... </h1>
+<ul>
+<li>
+   Modify internal/setup/secret.yml with your secrets to avoid interactive setup in workflow
+</li>
+<li>Modify the workflow to target a particular restaurant</li>
+<li>Rebuild the binary and push to repo with ur new swag workflow</li>
+</ul>
+
 
 <p align="center">
 <img src="https://i.ytimg.com/vi/TOecxTy4ZJE/hqdefault.jpg"/>

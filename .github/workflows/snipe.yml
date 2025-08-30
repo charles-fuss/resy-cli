@@ -25,34 +25,8 @@ jobs:
           set -euo pipefail
           echo "Building lin-resy-cli for linux/amd64"
           # Force a linux binary for ubuntu-latest runner (x86_64)
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o ./lin-resy-cli ./...
-          chmod +x ./lin-resy-cli
-          echo "Binary info:"
-          file ./lin-resy-cli || true
-
-      - name: Configure resy CLI (non-interactive fallback to piping)
-        env:
-          RESY_API_KEY: ${{ secrets.RESY_API_KEY }}
-          RESY_API_SECRET: ${{ secrets.RESY_API_SECRET }}
-        run: |
-          set -euo pipefail
-
-          if [ -z "${RESY_API_KEY:-}" ] || [ -z "${RESY_API_SECRET:-}" ]; then
-            echo "Missing RESY_API_KEY or RESY_API_SECRET secrets. Exiting."
-            exit 1
-          fi
-
-          echo "Attempting non-interactive setup via flags..."
-          # try a non-interactive flag-based setup first (best-effort)
-          # NOTE: adjust the flag names if your CLI uses different flags
-          if ./lin-resy-cli setup --api-key "$RESY_API_KEY" --api-secret "$RESY_API_SECRET" >/dev/null 2>&1; then
-            echo "Configured resy CLI via flags."
-          else
-            echo "Flag-based setup failed or unsupported — falling back to piping secrets into interactive setup."
-            # Pipe the secrets to setup (assumes setup reads API key then secret from stdin)
-            printf '%s\n%s\n' "$RESY_API_KEY" "$RESY_API_SECRET" | ./lin-resy-cli setup
-            echo "Piped secrets into setup (best-effort)."
-          fi
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o lin-resy-cli ./...
+          chmod +x lin-resy-cli
 
       - name: Snipe at 09:00 America/New_York with micro-attempts
         run: |
