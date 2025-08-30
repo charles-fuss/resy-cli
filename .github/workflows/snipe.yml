@@ -40,22 +40,14 @@ jobs:
                 "23:00:00","23:15:00","23:30:00","23:45:00",
                 "00:00:00"
               )
-
+              $env:PARTY_SIZE = 2
+              $env:VENUE_ID = 60058
+              
               foreach ($t in $times) {
-                $args = @(
-                        'book',
-                        '--partySize', $env:PARTY_SIZE,
-                        '--reservationDate', $resDate,
-                        '--reservationTimes', $t,
-                        '--venueId', $env:VENUE_ID,
-                        '--reservationTypes', ''
-                      )
+                echo  book  --partySize=$env:PARTY_SIZE      --reservationDate=$date   --reservationTimes=$t   --venueId=$env:VENUE_ID --reservationTypes=""
 
-                  # show the command we will run (helpful for debugging)
-                  Write-Host "Running: & `"$exe`" $($args -join ' ')"
-
-                  # execute
-                  & "$exe" @args
-               }
+                Write-Host "Attempting booking at time: $t"
+                .\resy-cli-windows-amd64.exe book  --partySize=$env:PARTY_SIZE   --reservationDate=$date  --reservationTimes=$t  --venueId=$env:VENUE_ID  --reservationTypes=""
+              }
 
               Write-Host "All attempts finished."
