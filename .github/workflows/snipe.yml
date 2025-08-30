@@ -20,16 +20,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build binary if missing
+      - name: Build lin-resy-cli for linux/amd64
         run: |
           set -euo pipefail
-          if [ -f ./lin-resy-cli ]; then
-            echo "binary exists"
-          else
-            echo "No binary found. Attempting to build..."
-            go build -o ./lin-resy-cli ./...
-          fi
+          echo "Building lin-resy-cli for linux/amd64"
+          # Force a linux binary for ubuntu-latest runner (x86_64)
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o ./lin-resy-cli ./...
           chmod +x ./lin-resy-cli
+          echo "Binary info:"
+          file ./lin-resy-cli || true
 
       - name: Configure resy CLI (non-interactive fallback to piping)
         env:
