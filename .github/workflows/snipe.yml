@@ -58,11 +58,11 @@ jobs:
                 "00:00:00"
               )
               Write-Host "Authenticating to resy cli"
-              Start-Process -FilePath $exe -ArgumentList 'setup' -Verb RunAs -Wait
+              & "$exe" setup
 
 
               Write-Host "Testing auth"
-              Start-Process -FilePath $exe -ArgumentList 'ping' -Verb RunAs -Wait
+              & "$exe" ping
 
               foreach ($t in $times) {
                 Write-Host "=== Attempting booking at time: $t ==="
