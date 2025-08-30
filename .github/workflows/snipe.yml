@@ -71,7 +71,7 @@ jobs:
 
                 Write-Host ("CMD: ./{0} {1}" -f $exe, ($args -join ' '))
 
-                ./$exe @args
+                ./"$exe" @args
 
                 Write-Host "ExitCode: $LASTEXITCODE"
                 Start-Sleep -Milliseconds 250
