@@ -23,13 +23,21 @@ jobs:
           run: |
               Write-Host "ENV DEBUG: RES_DAYS_AHEAD='$env:RES_DAYS_AHEAD' VENUE_ID='$env:VENUE_ID' PARTY_SIZE='$env:PARTY_SIZE'"
 
-              # PowerShell on windows-latest
-              $ErrorActionPreference = "Stop"
+              # explicit path to binary in the workspace (safe)
+              $exe = Join-Path $env:GITHUB_WORKSPACE 'resy-cli-windows-amd64.exe'
+              Write-Host "Expected exe path: $exe"
 
-              # compute reservation date
-              $date = (Get-Date).AddDays($env:RES_DAYS_AHEAD).ToString('yyyy-MM-dd')
-              Write-Host "Reservation date: $date"
+              if (-not (Test-Path $exe)) {
+                Write-Host "Workspace listing (top-level):"
+                Get-ChildItem -Path $env:GITHUB_WORKSPACE -Force | Select-Object -First 100 | Format-Table
+                throw "Binary not found at $exe. Ensure the download step wrote to the repository working directory."
+              }
 
+              # compute reservation date (use single variable name)
+              $resDate = (Get-Date).AddDays([int]$env:RES_DAYS_AHEAD).ToString('yyyy-MM-dd')
+              Write-Host "Reservation date: $resDate"
+
+              # times list
               $times = @(
                 "17:00:00","17:15:00","17:30:00","17:45:00",
                 "18:00:00","18:15:00","18:30:00","18:45:00",
@@ -40,21 +48,26 @@ jobs:
                 "23:00:00","23:15:00","23:30:00","23:45:00",
                 "00:00:00"
               )
-              $env:PARTY_SIZE = 2
-              $env:VENUE_ID = 60058
-              $exe = "resy-cli-windows-amd64.exe"
 
               foreach ($t in $times) {
+                Write-Host "=== Attempting booking at time: $t ==="
+
                 $args = @(
-                'book',
-                '--partySize', $env:PARTY_SIZE,
-                '--reservationDate', $resDate,
-                '--reservationTimes', $t,
-                '--venueId', $env:VENUE_ID
-              )
-                Write-Host "Attempting booking at time: $t"
+                  'book',
+                  '--partySize', $env:PARTY_SIZE,
+                  '--reservationDate', $resDate,
+                  '--reservationTimes', $t,
+                  '--venueId', $env:VENUE_ID
+                )
+
+                # log the exact command that will run (single-line)
+                Write-Host ("CMD: & '{0}' {1}" -f $exe, ($args -join ' '))
+
+                # run it; use call operator with an args array (safe quoting)
                 & "$exe" @args
-                .\resy-cli-windows-amd64.exe book --partySize=$env:PARTY_SIZE  --reservationDate=$date --reservationTimes=$t --venueId=$env:VENUE_ID --reservationTypes=""
+
+                Write-Host "ExitCode: $LASTEXITCODE"
+                Start-Sleep -Milliseconds 250
               }
 
               Write-Host "All attempts finished."
