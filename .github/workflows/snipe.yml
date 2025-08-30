@@ -12,8 +12,8 @@ jobs:
   run-windows-binary-private:
       runs-on: windows-latest
       env:
-        RES_DAYS_AHEAD: "20"
-        VENUE_ID: "60058"
+        RES_DAYS_AHEAD: "12"
+        VENUE_ID: "5091"
         PARTY_SIZE: "2"
       steps:
         - name: Checkout repo (so supporting files exist)
