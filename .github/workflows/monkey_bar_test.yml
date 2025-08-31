@@ -2,10 +2,6 @@ name: Monkey Bar Test
 
 on:
   schedule:
-    # Runs at 13:00 UTC (09:00 EDT when DST is active)
-    - cron: '0 13 * * *'
-    # Runs at 14:00 UTC (09:00 EST when standard time is active)
-    - cron: '0 14 * * *'
     - cron: '5 * * * *'
   workflow_dispatch:
 
