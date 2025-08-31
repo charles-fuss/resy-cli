@@ -1,4 +1,4 @@
-name: Monkey Bar
+name: Monkey Bar Prod
 
 on:
   schedule:
@@ -6,7 +6,6 @@ on:
     - cron: '0 13 * * *'
     # Runs at 14:00 UTC (09:00 EST when standard time is active)
     - cron: '0 14 * * *'
-    - cron: '5 * * * *'
 
 jobs:
   run-binary:
