@@ -13,6 +13,7 @@
 <li>
 Improvements
 </li>
+<li>Refresh api keys automatically</li>
 <li>Remove help screen when the app fails to make a reservation</li>
 <li>Make restaurant adding more modular (have to rebuild, add configs to workflow file, etc)</li>
 </ul>
