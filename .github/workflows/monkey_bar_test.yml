@@ -1,46 +1,46 @@
-name: Monkey Bar Test
+# name: Monkey Bar Test
 
-on:
-  schedule:
-    - cron: '5 * * * *'
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '5 * * * *'
+#   workflow_dispatch:
 
-jobs:
-  run-binary:
-      runs-on: ubuntu-latest
-      env:
-        RES_DAYS_AHEAD: "20"
-        VENUE_ID: "60058"
-        PARTY_SIZE: "2"
-      steps:
-        - name: Checkout repo (so supporting files exist)
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 1
-        - name: Download binary
-          run: |
-              wget https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -O resy-cli-lin
-              chmod +x resy-cli-lin
-        - name: Book reservation
-          run: |
-              #!/usr/bin/env bash
-              set -euo pipefail
+# jobs:
+#   run-binary:
+#       runs-on: ubuntu-latest
+#       env:
+#         RES_DAYS_AHEAD: "20"
+#         VENUE_ID: "60058"
+#         PARTY_SIZE: "2"
+#       steps:
+#         - name: Checkout repo (so supporting files exist)
+#           uses: actions/checkout@v4
+#           with:
+#             fetch-depth: 1
+#         - name: Download binary
+#           run: |
+#               wget https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -O resy-cli-lin
+#               chmod +x resy-cli-lin
+#         - name: Book reservation
+#           run: |
+#               #!/usr/bin/env bash
+#               set -euo pipefail
               
-              echo "resy auth"
-              ./resy-cli-lin setup
-              echo "resy auth test"
-              ./resy-cli-lin ping
+#               echo "resy auth"
+#               ./resy-cli-lin setup
+#               echo "resy auth test"
+#               ./resy-cli-lin ping
 
 
-              # config
-              BIN="$(pwd)/resy-cli-lin"               
-              # times to attempt (one per invocation)
-              TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
-                      "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
-                      "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
-                      "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
+#               # config
+#               BIN="$(pwd)/resy-cli-lin"               
+#               # times to attempt (one per invocation)
+#               TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
+#                       "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
+#                       "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
+#                       "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
 
-                for t in "${TIMES[@]}"; do
-                  echo "Attempt: time=$t"
-                  "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID" || true
-                done
+#                 for t in "${TIMES[@]}"; do
+#                   echo "Attempt: time=$t"
+#                   "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID" || true
+#                 done
