@@ -28,6 +28,7 @@ jobs:
           run: |
               #!/usr/bin/env bash
               set -euo pipefail
+              echo "Current time at run: " $(date)
 
               # config
               BIN="$(pwd)/resy-cli-lin"               # path to linux binary (adjust)
