@@ -2,59 +2,102 @@ name: Torrisi
 
 on:
   schedule:
-    # Runs at 13:00 UTC (09:00 EDT when DST is active)
-    - cron: '0 14 * * *'
-    # Runs at 14:00 UTC (09:00 EST when standard time is active)
-    - cron: '0 15 * * *'
+    # Run at 09:57 America/New_York:
+    # - 09:57 EDT == 13:57 UTC
+    - cron: '57 13 * * *'
+    # - 09:57 EST == 14:57 UTC
+    - cron: '57 14 * * *'
   workflow_dispatch:
 
 jobs:
   run-binary:
-      runs-on: ubuntu-latest
-      env:
-        RES_DAYS_AHEAD: "30"
-        VENUE_ID: "64593"
-        PARTY_SIZE: "2"
-      steps:
-        - name: Checkout repo (so supporting files exist)
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 1
-        - name: Download binary
-          run: |
-              wget https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -O resy-cli-lin
-              chmod +x resy-cli-lin
-        - name: Book reservation
-          run: |
-              #!/usr/bin/env bash
-              set -euo pipefail
-              echo "Current time at run: " $(date)
+    runs-on: ubuntu-latest
+    env:
+      RES_DAYS_AHEAD: "30"
+      VENUE_ID: "64593"
+      PARTY_SIZE: "2"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-              # config
-              BIN="$(pwd)/resy-cli-lin"               # path to linux binary (adjust)
-              # times to attempt (one per invocation)
-              TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
-                      "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
-                      "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
-                      "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
+      - name: Download binary
+        run: |
+          set -euo pipefail
+          wget -q https://github.com/charles-fuss/resy-cli/releases/download/v1.2.0/resy-cli-lin -O resy-cli-lin
+          chmod +x resy-cli-lin
 
-              # compute ET target for today at 09:00:00
-              TODAY_ET=$(TZ=America/New_York date +%F)
-              TARGET_TS=$(TZ=America/New_York date -d "$TODAY_ET 09:00:00" +%s)
+      - name: Wait until 10:00:00 America/New_York (precise)
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          TARGET_TZ="America/New_York"
+          TARGET_TIME="10:00:00"
+
+          # Target is today at 10:00 in America/New_York
+          TARGET_TS=$(TZ="$TARGET_TZ" date -d "$(TZ=$TARGET_TZ date +%F) $TARGET_TIME" +%s)
+          NOW_TS=$(date +%s)
+          SLEEP_FOR=$((TARGET_TS - NOW_TS))
+
+          echo "Now (UTC): $(date -u '+%Y-%m-%d %T UTC')"
+          echo "Target time (${TARGET_TZ}): $(TZ=$TARGET_TZ date -d "@$TARGET_TS" '+%Y-%m-%d %T %Z')"
+          if [ "$SLEEP_FOR" -gt 0 ]; then
+            echo "Sleeping $SLEEP_FOR seconds until target..."
+            # Sleep in chunks so we print progress and don't swallow interrupts
+            while [ $SLEEP_FOR -gt 0 ]; do
+              if [ $SLEEP_FOR -gt 60 ]; then
+                sleep 60
+              else
+                sleep $SLEEP_FOR
+              fi
               NOW_TS=$(date +%s)
+              SLEEP_FOR=$((TARGET_TS - NOW_TS))
+              echo "Seconds left: ${SLEEP_FOR}"
+            done
+          else
+            echo "Target time already passed (sleep_for=${SLEEP_FOR}). Proceeding immediately."
+          fi
+          echo "Reached target: $(TZ=$TARGET_TZ date '+%Y-%m-%d %T %Z')"
 
-              echo "resy auth"
-              ./resy-cli-lin setup
-              echo "resy auth test"
-              ./resy-cli-lin ping
+      - name: Auth / smoke test (resy)
+        run: |
+          set -euo pipefail
+          ./resy-cli-lin setup
+          ./resy-cli-lin ping
 
-              RES_DATE=$(date -d "+${RES_DAYS_AHEAD} days" '+%Y-%m-%d')
-              echo "Reservation date: $RES_DATE"
+      - name: Book reservation (aggressive retries for a short window)
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          BIN="$(pwd)/resy-cli-lin"
+          RES_DATE=$(date -d "+${RES_DAYS_AHEAD} days" '+%Y-%m-%d')
+          echo "Reservation date: $RES_DATE"
 
-                for t in "${TIMES[@]}"; do
-                  echo "Attempt: time=$t"
-                  "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID" || true
-                done
+          # times to attempt (one per invocation)
+          TIMES=( "17:00:00" "17:15:00" "17:30:00" "17:45:00" "18:00:00" "18:15:00" "18:30:00" "18:45:00" \
+                  "19:00:00" "19:15:00" "19:30:00" "19:45:00" "20:00:00" "20:15:00" "20:30:00" "20:45:00" \
+                  "21:00:00" "21:15:00" "21:30:00" "21:45:00" "22:00:00" "22:15:00" "22:30:00" "22:45:00" \
+                  "23:00:00" "23:15:00" "23:30:00" "23:45:00" "00:00:00" )
 
-                NOW_TS=$(date +%s)
-              done
+          # How long to keep retrying after hitting 10:00 (seconds)
+          RETRY_WINDOW=300   # 5 minutes
+          END=$(( $(date +%s) + RETRY_WINDOW ))
+
+          # Loop: try every time slot, repeat until success or timeout
+          while [ $(date +%s) -le $END ]; do
+            for t in "${TIMES[@]}"; do
+              echo "$(date '+%T') Attempting $t (venue $VENUE_ID, party $PARTY_SIZE)"
+              if "$BIN" book --partySize "$PARTY_SIZE" --reservationDate "$RES_DATE" --reservationTimes "$t" --venueId "$VENUE_ID"; then
+                echo "Booking succeeded for $t at $(date '+%Y-%m-%d %T')"
+                exit 0
+              fi
+              # tiny pause to avoid hammering remote endpoint; keep it small so we stay fast
+              sleep 0.5
+            done
+            # completed a pass over all times; if still within retry window, try again
+            echo "$(date '+%T') Completed a pass; still within retry window? $(( END - $(date +%s) )) seconds left"
+          done
+
+          echo "All attempts exhausted within retry window. No booking succeeded."
+          exit 1
